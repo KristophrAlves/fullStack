@@ -1,0 +1,61 @@
+version: '3.3'
+services:
+  backend:
+    # image: backend-kris:latest
+    build:
+      context: ./back-end
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./back-end:/usr/src/app
+    environment:
+      NODE_ENV: development
+    networks:
+      - db_overlay_network  # Rede overlay do Swarm
+
+  frontend:
+    # image: frontend-kris:latest
+    build:
+      context: ./front-end
+    ports:
+      - "80:3000"
+    volumes:
+      - ./front-end:/usr/src/app
+    environment:
+      NODE_ENV: development
+    networks:
+      - db_overlay_network  # Rede overlay do Swarm
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5434:5434"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: rides
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql-scripts:/docker-entrypoint-initdb.d
+    command: -p 5434
+    networks:
+      - db_overlay_network  # Rede overlay do Swarm
+
+  pgadmin:
+    image: dpage/pgadmin4:7.8
+    container_name: pgadmin
+    ports:
+      - "5000:5000"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 5000
+    networks:
+      - db_overlay_network  # Rede overlay do Swarm
+
+networks:
+  db_overlay_network:
+    driver: bridge  # Rede overlay para Swarm
+
+volumes:
+  pg_data: {}  # Volume persistente para dados do PostgreSQL

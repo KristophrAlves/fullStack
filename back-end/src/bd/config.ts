@@ -3,10 +3,10 @@ import { Pool } from 'pg'; // Importa o Pool para gerenciar as conexões com o b
 // Configuração do PostgreSQL
 const pool = new Pool({
     user: 'postgres', // Usuário padrão
-    host: 'localhost', // Endereço do servidor (pode ser 'localhost' ou o IP do servidor)
+    host: 'postgres', // Endereço do servidor (pode ser 'localhost' ou o IP do servidor)
     database: 'rides', // Nome do banco de dados
     password: 'root', // Substitua com a senha do usuário 'postgres'
-    port: 5432, // Porta padrão do PostgreSQL
+    port: 5434, // Porta padrão do PostgreSQL
 });
 
 // Função para testar a conexão com o banco de dados
