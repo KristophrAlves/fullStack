@@ -140,17 +140,41 @@ const getDriverById = async (driverId: number) => {
 
 // Função para salvar a viagem no banco de dados
 const saveRideToHistory = async (rideData: any) => {
+    const { customer_id, origin, destination, distance, duration, driver_id, value } = rideData;
+
+    const client = await pool.connect();
+
     try {
-        const { customer_id, origin, destination, distance, duration, driver_id, value } = rideData;
-        const query = `
+        // Verificar se o usuário existe
+        const userCheckQuery = 'SELECT id FROM public.users WHERE id = $1';
+        const userCheckResult = await client.query(userCheckQuery, [customer_id]);
+
+        // Se o usuário não existir, inserir na tabela 'users'
+        if (userCheckResult.rowCount === 0) {
+            const insertUserQuery = `
+                INSERT INTO public.users (id, name, email, created_at) 
+                VALUES ($1, $2, $3, NOW())`;
+
+            await client.query(insertUserQuery, [
+                customer_id,
+                `user${customer_id}`,
+                `user${customer_id}@gmail.com`
+            ]);
+        }
+
+        // Inserir a viagem na tabela 'rides'
+        const rideQuery = `
             INSERT INTO Rides (customer_id, origin, destination, distance, duration, driver_id, value)
-            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
-        `;
-        const result = await pool.query(query, [customer_id, origin, destination, distance, duration, driver_id, value]);
-        return result.rows[0]; // Retorna o ID da viagem salva
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`;
+
+        const rideResult = await client.query(rideQuery, [customer_id, origin, destination, distance, duration, driver_id, value]);
+
+        return rideResult.rows[0]; // Retorna o ID da viagem salva
     } catch (error) {
         console.error('Erro ao salvar viagem no histórico:', error);
         throw new Error('Erro ao salvar viagem no banco de dados.');
+    } finally {
+        client.release();
     }
 };
 
