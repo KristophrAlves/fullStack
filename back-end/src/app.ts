@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import bodyParser from 'body-parser';
@@ -8,6 +9,9 @@ import rideRoutes from './routes/ride.routes';
 import driverRoutes from './routes/driver.routes';
 
 const app = express();
+
+// Habilita o CORS para todas as origens
+app.use(cors());
 
 // Carregar o arquivo swagger.yaml
 const swaggerDocument = YAML.load('./src/swagger/swagger.yaml');
