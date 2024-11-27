@@ -1,0 +1,359 @@
+openapi: 3.0.1
+info:
+  title: Transport API
+  description: API para estimativa de viagens, confirmação e gerenciamento de motoristas.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+paths:
+  /ride/estimate:
+    post:
+      summary: Estima o custo da viagem
+      description: Calcula a rota e o custo da viagem com base nos motoristas disponíveis.
+      tags:
+        - Ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: string
+                  description: ID do cliente
+                  example: "123"
+                origin:
+                  type: string
+                  description: Endereço de origem
+                  example: "Av. Paulista, São Paulo"
+                destination:
+                  type: string
+                  description: Endereço de destino
+                  example: "Praça da Sé, São Paulo"
+              required:
+                - customer_id
+                - origin
+                - destination
+      responses:
+        "200":
+          description: Estimativa calculada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                      longitude:
+                        type: number
+                  destination:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                      longitude:
+                        type: number
+                  distance:
+                    type: number
+                    description: Distância em quilômetros
+                  duration:
+                    type: string
+                    description: Duração estimada
+                  options:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        vehicle:
+                          type: string
+                        review:
+                          type: object
+                          properties:
+                            rating:
+                              type: number
+                            comment:
+                              type: string
+                        value:
+                          type: number
+                  routeResponse:
+                    type: object
+                    description: Resposta detalhada da API do Google Maps
+        "400":
+          description: Erro de validação dos dados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error_description:
+                    type: string
+        "500":
+          description: Erro interno no servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error_description:
+                    type: string
+
+  /ride/confirm:
+    patch:
+      summary: Confirma uma viagem e a grava no histórico
+      description: Confirma a viagem selecionada e grava os dados no histórico.
+      tags:
+        - Ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: string
+                  description: ID do cliente
+                  example: "12345"
+                origin:
+                  type: string
+                  description: Endereço de origem
+                  example: "Sobradinho, Brasília - DF, Brasil"
+                destination:
+                  type: string
+                  description: Endereço de destino
+                  example: "Ceilândia, Brasília - DF, Brasil"
+                distance:
+                  type: number
+                  description: Distância da viagem em quilômetros
+                  example: 42.809
+                duration:
+                  type: string
+                  description: Duração da viagem
+                  example: "46 mins"
+                driver:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID do motorista
+                      example: 1
+                    name:
+                      type: string
+                      description: Nome do motorista
+                      example: "João Silva"
+                value:
+                  type: number
+                  description: Valor total da corrida
+                  example: 85.00
+      responses:
+        "200":
+          description: Operação realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        "400":
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "INVALID_DATA"
+                  error_description:
+                    type: string
+                    example: "Dados obrigatórios ausentes."
+        "404":
+          description: Motorista não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "DRIVER_NOT_FOUND"
+                  error_description:
+                    type: string
+                    example: "Motorista não encontrado."
+        "406":
+          description: Quilometragem inválida para o motorista
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "INVALID_DISTANCE"
+                  error_description:
+                    type: string
+                    example: "A quilometragem informada é inválida para o motorista."
+
+  /ride/{customer_id}:
+    get:
+      summary: "Lista as viagens realizadas por um usuário"
+      description: "Retorna todas as viagens realizadas pelo cliente, com filtro opcional por motorista."
+      tags:
+        - Ride
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: string
+          description: ID do cliente
+          example: "123"
+        - in: query
+          name: driver_id
+          required: false
+          schema:
+            type: integer
+          description: ID do motorista para filtrar as viagens
+          example: 1
+      responses:
+        "200":
+          description: "Operação realizada com sucesso"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_id:
+                    type: string
+                  rides:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        date:
+                          type: string
+                          format: datetime
+                        origin:
+                          type: string
+                        destination:
+                          type: string
+                        distance:
+                          type: number
+                        duration:
+                          type: string
+                        driver:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                        value:
+                          type: number
+        "400":
+          description: "Dados inválidos"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "INVALID_DRIVER"
+                  error_description:
+                    type: string
+                    example: "O ID do motorista informado é inválido."
+        "404":
+          description: "Nenhum registro encontrado"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "NO_RIDES_FOUND"
+                  error_description:
+                    type: string
+                    example: "Nenhum registro encontrado para o cliente."
+
+  /driver:
+    get:
+      summary: Retorna todos os motoristas disponíveis
+      description: Este endpoint retorna uma lista de motoristas, incluindo o nome, veículo, taxa e avaliação.
+      tags:
+        - Drivers
+      responses:
+        "200":
+          description: Lista de motoristas retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "Homer Simpson"
+                    vehicle:
+                      type: string
+                      example: "Plymouth Valiant 1973 rosa"
+                    rate:
+                      type: number
+                      format: float
+                      example: 2.5
+                    minimum_distance:
+                      type: integer
+                      example: 10
+                    review_rating:
+                      type: number
+                      format: float
+                      example: 4.2
+        "404":
+          description: Nenhum motorista encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "NOT_FOUND"
+                  error_description:
+                    type: string
+                    example: "Nenhum motorista encontrado."
+        "500":
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                    example: "SERVER_ERROR"
+                  error_description:
+                    type: string
+                    example: "Ocorreu um erro ao buscar os motoristas."

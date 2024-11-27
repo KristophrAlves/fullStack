@@ -1,0 +1,40 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# VSCode
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+
+# MacOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+
+# NPM / Yarn lock files (if you don't want them in version control)
+# npm package-lock.json
+# yarn.lock
